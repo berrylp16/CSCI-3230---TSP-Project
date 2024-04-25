@@ -1,3 +1,5 @@
+﻿using System.Diagnostics;
+
 class TSPSolver
 {
     static int[,] distances; // 2D array to store distances between cities
@@ -28,6 +30,7 @@ class TSPSolver
         while (!exit)
         {
             Console.WriteLine("Choose solving method:");
+            Console.WriteLine("0. Approximation Algorithm");
             Console.WriteLine("1. Brute Force");
             Console.WriteLine("2. Branch and Bound");
             Console.WriteLine("3. Exit");
@@ -38,6 +41,18 @@ class TSPSolver
             {
                 switch (choice)
                 {
+                    case 0:
+                        Stopwatch timerApprox = new Stopwatch();
+                        timerApprox.Start();
+                        bestRoute = null;
+                        minDistance = int.MaxValue;
+                        int[] routeApprox = ApproximationAlgorithm();
+                        timerApprox.Stop();
+                        long elapsedTicksApprox = timerApprox.ElapsedTicks;
+                        Console.WriteLine($"Time (in ticks): {elapsedTicksApprox}");
+                        PrintSolution(routeApprox);
+                        break;
+
                     case 1:
                         Stopwatch timerBF = new Stopwatch();
                         timerBF.Start();
@@ -211,6 +226,8 @@ class TSPSolver
         b = temp;
     }
 
+
+
     static int CalculateTotalDistance(int[] route)
     {
         int totalDistance = 0;
@@ -230,6 +247,86 @@ class TSPSolver
             lowerBound += distances[route[i], route[i + 1]];
         }
         return lowerBound;
+    }
+
+
+    static int[] ApproximationAlgorithm()
+    {
+        // Step 1: Select a root vertex (0)
+        int rootVertex = 0;
+
+        // Step 2: Compute Minimum Spanning Tree (MST) using Prim's algorithm
+        int[] parent = new int[numCities];
+        int[] key = new int[numCities];
+        bool[] mstSet = new bool[numCities];
+
+        for (int i = 0; i < numCities; i++)
+        {
+            key[i] = int.MaxValue;
+            mstSet[i] = false;
+        }
+
+        key[rootVertex] = 0;
+        parent[rootVertex] = -1;
+
+        for (int count = 0; count < numCities - 1; count++)
+        {
+            int u = MinKey(key, mstSet);
+            mstSet[u] = true;
+
+            for (int v = 0; v < numCities; v++)
+            {
+                if (distances[u, v] != 0 && !mstSet[v] && distances[u, v] < key[v])
+                {
+                    parent[v] = u;
+                    key[v] = distances[u, v];
+                }
+            }
+        }
+
+        // Step 3: Perform Preorder Walk of the MST
+        int[] route = new int[numCities];
+        bool[] visited = new bool[numCities];
+        Preorder(rootVertex, parent, route, visited);
+
+        // Step 4: Return Hamiltonian Cycle by closing the cycle back to the root
+        route[numCities - 1] = rootVertex;
+
+        return route;
+    }
+
+    static int MinKey(int[] key, bool[] mstSet)
+    {
+        int min = int.MaxValue;
+        int minIndex = -1;
+
+        for (int v = 0; v < numCities; v++)
+        {
+            if (!mstSet[v] && key[v] < min)
+            {
+                min = key[v];
+                minIndex = v;
+            }
+        }
+
+        return minIndex;
+    }
+
+    static int Preorder(int vertex, int[] parent, int[] route, bool[] visited)
+    {
+        visited[vertex] = true;
+        int index = 0;
+        route[index++] = vertex;
+
+        for (int i = 0; i < numCities; i++)
+        {
+            if (parent[i] == vertex && !visited[i])
+            {
+                index += Preorder(i, parent, route, visited);
+            }
+        }
+
+        return index;
     }
 
     static void PrintSolution(int[] route)
