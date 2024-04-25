@@ -1,4 +1,4 @@
-﻿class TSPSolver
+class TSPSolver
 {
     static int[,] distances; // 2D array to store distances between cities
     static int numCities;    // Number of cities
@@ -7,17 +7,22 @@
 
     static void Main()
     {
-        // Example usage:
-        // Define the distances between cities (replace with your own data)
-        distances = new int[,]
-        {
-            { 0, 10, 15, 20 },
-            { 10, 0, 35, 25 },
-            { 15, 35, 0, 30 },
-            { 20, 25, 30, 0 }
-        };
+        string data = @"-3138 -2512
+6804 -1072
+-193 8782
+-5168 2636
+-8022 -3864
+-9955 -2923
+-7005 2118
+7775 -8002
+4244 -1339
+9478 -1973
+-7795 -5000
+-4521 1266
+-192 3337
+-9860 1311";
 
-        numCities = distances.GetLength(0);
+        ParseDataAndCalculateDistances(data);
 
         bool exit = false;
         while (!exit)
@@ -34,15 +39,25 @@
                 switch (choice)
                 {
                     case 1:
+                        Stopwatch timerBF = new Stopwatch();
+                        timerBF.Start();
                         bestRoute = null;
                         minDistance = int.MaxValue;
                         int[] route = BruteForceSolveTSP();
+                        timerBF.Stop();
+                        long elapsedTicksBF = timerBF.ElapsedTicks;
+                        Console.WriteLine($"Time (in ticks): {elapsedTicksBF}");
                         PrintSolution(route);
                         break;
                     case 2:
                         bestRoute = new int[numCities];
                         minDistance = int.MaxValue;
+                        Stopwatch timerBB = new Stopwatch();
+                        timerBB.Start();
                         int[] routeBB = BranchAndBoundSolveTSP();
+                        timerBB.Stop();
+                        long elapsedTicksBB = timerBB.ElapsedTicks;
+                        Console.WriteLine($"Time (in ticks): {elapsedTicksBB}");
                         PrintSolution(routeBB);
                         break;
                     case 3:
@@ -60,7 +75,36 @@
         }
     }
 
-    // Brute Force algorithm
+    static void ParseDataAndCalculateDistances(string data)
+    {
+        string[] lines = data.Split('\n');
+        numCities = lines.Length;
+        distances = new int[numCities, numCities];
+
+        for (int i = 0; i < numCities; i++)
+        {
+            string[] parts = lines[i].Split(' ');
+            int x1 = int.Parse(parts[0]);
+            int y1 = int.Parse(parts[1]);
+            for (int j = 0; j < i; j++)
+            {
+                string[] parts2 = lines[j].Split(' ');
+                int x2 = int.Parse(parts2[0]);
+                int y2 = int.Parse(parts2[1]);
+                int distance = CalculateDistance(x1, y1, x2, y2);
+                distances[i, j] = distance;
+                distances[j, i] = distance;
+            }
+            distances[i, i] = 0; // Distance from a city to itself is 0
+        }
+    }
+
+    static int CalculateDistance(int x1, int y1, int x2, int y2)
+    {
+        // Using Euclidean distance formula
+        return (int)Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2));
+    }
+
     static int[] BruteForceSolveTSP()
     {
         int[] currentRoute = new int[numCities];
@@ -81,7 +125,6 @@
         return bestRoute;
     }
 
-    // Branch and Bound algorithm
     static int[] BranchAndBoundSolveTSP()
     {
         int[] currentRoute = new int[numCities];
@@ -98,7 +141,6 @@
         return bestRoute;
     }
 
-    // Recursive function to generate all permutations
     static void Permute(int k, int[] currentRoute)
     {
         if (k == numCities)
@@ -129,7 +171,6 @@
         }
     }
 
-    // Branch and Bound algorithm
     static void BranchAndBound(int[] currentRoute, int level, int currentDistance)
     {
         if (level == numCities)
@@ -163,7 +204,6 @@
         }
     }
 
-    // Function to swap two elements in an array
     static void Swap(ref int a, ref int b)
     {
         int temp = a;
@@ -171,19 +211,17 @@
         b = temp;
     }
 
-    // Function to calculate total distance of a route
     static int CalculateTotalDistance(int[] route)
     {
         int totalDistance = 0;
         for (int i = 0; i < numCities - 1; i++)
         {
-            totalDistance += distances[route[i], route[i + 1]];
+            totalDistance += distances[route[i], route[(i + 1) % numCities]]; // Use modulo to wrap around to the starting city
         }
         totalDistance += distances[route[numCities - 1], route[0]]; // Return to the starting city
         return totalDistance;
     }
 
-    // Function to calculate the lower bound of a partial solution
     static int CalculateLowerBound(int[] route, int level)
     {
         int lowerBound = 0;
@@ -194,7 +232,6 @@
         return lowerBound;
     }
 
-    // Function to print the solution
     static void PrintSolution(int[] route)
     {
         Console.WriteLine("Shortest route: " + string.Join(" -> ", route) + " -> 0");
