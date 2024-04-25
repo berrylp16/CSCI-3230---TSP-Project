@@ -1,7 +1,26 @@
 import matplotlib.pyplot as plt
 
-# Points provided
-points_str = """-3138 -2512
+# Function to parse points from a string
+def parse_points(points_str):
+    return [tuple(map(int, point.split())) for point in points_str.split('\n')]
+
+# Function to parse order from a string
+def parse_order(order_str):
+    return list(map(int, order_str.split(' -> ')))
+
+# Function to prompt the user for input with a default value
+def prompt_with_default(prompt, default):
+    user_input = input(prompt + f" (press Enter to use default: '{default}'):")
+    if user_input.strip() == "":
+        return default
+    return user_input
+
+# Prompt user for filename
+filename = input("Enter filename (press Enter to use default string): ")
+
+# Use default string if filename is empty
+if not filename:
+    points_str = """-3138 -2512
 6804 -1072
 -193 8782
 -5168 2636
@@ -15,12 +34,19 @@ points_str = """-3138 -2512
 -4521 1266
 -192 3337
 -9860 1311"""
+else:
+    # Read points from file
+    with open(filename, 'r') as file:
+        points_str = file.read()
 
-# Convert points to list of tuples
-points = [tuple(map(int, point.split())) for point in points_str.split('\n')]
+# Parse points
+points = parse_points(points_str)
 
-# Define the order to connect points
-order = [0, 1, 7, 9, 8, 12, 3, 6, 11, 13, 5, 4, 10, 2, 0]
+# Prompt user for route
+route = prompt_with_default("Enter route", "7 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0")
+
+# Parse order
+order = parse_order(route)
 
 # Extract x and y coordinates separately
 x_coords = [point[0] for point in points]
