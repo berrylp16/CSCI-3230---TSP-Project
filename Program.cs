@@ -33,7 +33,8 @@ class TSPSolver
             Console.WriteLine("0. Approximation Algorithm");
             Console.WriteLine("1. Brute Force");
             Console.WriteLine("2. Branch and Bound");
-            Console.WriteLine("3. Exit");
+            Console.WriteLine("3. Nearest Neighbor");
+            Console.WriteLine("4. Exit");
             Console.Write("Enter your choice: ");
 
             int choice;
@@ -76,6 +77,17 @@ class TSPSolver
                         PrintSolution(routeBB);
                         break;
                     case 3:
+                        Stopwatch timerNN = new Stopwatch();
+                        timerNN.Start();
+                        bestRoute = null;
+                        minDistance = int.MaxValue;
+                        int[] routeNN = NearestNeighborSolveTSP();
+                        timerNN.Stop();
+                        long elapsedTicksNN = timerNN.ElapsedTicks;
+                        Console.WriteLine($"Time (in ticks): {elapsedTicksNN}");
+                        PrintSolution(routeNN);
+                        break;
+                    case 4:
                         exit = true;
                         break;
                     default:
@@ -226,7 +238,45 @@ class TSPSolver
         b = temp;
     }
 
+    static int[] NearestNeighborSolveTSP()
+    {
+        int[] currentRoute = new int[numCities];
+        bool[] visited = new bool[numCities];
 
+        // Start from city 0
+        currentRoute[0] = 0;
+        visited[0] = true;
+
+        // Select nearest neighbor until all cities are visited
+        for (int i = 1; i < numCities; i++)
+        {
+            int nearestCity = FindNearestNeighbor(currentRoute[i - 1], visited);
+            currentRoute[i] = nearestCity;
+            visited[nearestCity] = true;
+        }
+
+        // Complete the route by returning to the starting city
+        currentRoute[numCities - 1] = 0;
+
+        return currentRoute;
+    }
+
+    static int FindNearestNeighbor(int city, bool[] visited)
+    {
+        int nearestCity = -1;
+        int minDistance = int.MaxValue;
+
+        for (int i = 0; i < numCities; i++)
+        {
+            if (!visited[i] && distances[city, i] < minDistance)
+            {
+                minDistance = distances[city, i];
+                nearestCity = i;
+            }
+        }
+
+        return nearestCity;
+    }
 
     static int CalculateTotalDistance(int[] route)
     {
