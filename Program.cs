@@ -250,20 +250,20 @@ class TSPSolver
     }
 
 
-    static int[] ApproximationAlgorithm()
+        static int[] ApproximationAlgorithm()
     {
-        // Step 1: Select a root vertex (0)
+        // Step 1: Select root vertex (choose the first vertex)
         int rootVertex = 0;
 
-        // Step 2: Compute Minimum Spanning Tree (MST) using Prim's algorithm
+        // Step 2: Compute minimum spanning tree (using Prim's or Kruskal's algorithm)
         int[] parent = new int[numCities];
+        bool[] visited = new bool[numCities];
         int[] key = new int[numCities];
-        bool[] mstSet = new bool[numCities];
 
         for (int i = 0; i < numCities; i++)
         {
             key[i] = int.MaxValue;
-            mstSet[i] = false;
+            visited[i] = false;
         }
 
         key[rootVertex] = 0;
@@ -271,12 +271,12 @@ class TSPSolver
 
         for (int count = 0; count < numCities - 1; count++)
         {
-            int u = MinKey(key, mstSet);
-            mstSet[u] = true;
+            int u = MinKey(key, visited);
+            visited[u] = true;
 
             for (int v = 0; v < numCities; v++)
             {
-                if (distances[u, v] != 0 && !mstSet[v] && distances[u, v] < key[v])
+                if (distances[u, v] != 0 && !visited[v] && distances[u, v] < key[v])
                 {
                     parent[v] = u;
                     key[v] = distances[u, v];
@@ -284,25 +284,26 @@ class TSPSolver
             }
         }
 
-        // Step 3: Perform Preorder Walk of the MST
-        int[] route = new int[numCities];
-        bool[] visited = new bool[numCities];
-        Preorder(rootVertex, parent, route, visited);
+        // Step 3: Perform preorder walk of the found tree
+        int[] preorderWalk = new int[numCities];
+        Preorder(rootVertex, parent, preorderWalk);
 
-        // Step 4: Return Hamiltonian Cycle by closing the cycle back to the root
-        route[numCities - 1] = rootVertex;
+        // Step 4: Return a Hamiltonian cycle
+        int[] hamiltonianCycle = new int[numCities + 1];
+        Array.Copy(preorderWalk, hamiltonianCycle, numCities);
+        hamiltonianCycle[numCities] = rootVertex; // Repeat the starting vertex at the end
 
-        return route;
+        return hamiltonianCycle;
     }
 
-    static int MinKey(int[] key, bool[] mstSet)
+    static int MinKey(int[] key, bool[] visited)
     {
         int min = int.MaxValue;
         int minIndex = -1;
 
         for (int v = 0; v < numCities; v++)
         {
-            if (!mstSet[v] && key[v] < min)
+            if (!visited[v] && key[v] < min)
             {
                 min = key[v];
                 minIndex = v;
@@ -312,23 +313,20 @@ class TSPSolver
         return minIndex;
     }
 
-    static int Preorder(int vertex, int[] parent, int[] route, bool[] visited)
+    static int Preorder(int root, int[] parent, int[] preorderWalk, int index = 0)
     {
-        visited[vertex] = true;
-        int index = 0;
-        route[index++] = vertex;
+        preorderWalk[index++] = root;
 
         for (int i = 0; i < numCities; i++)
         {
-            if (parent[i] == vertex && !visited[i])
+            if (parent[i] == root)
             {
-                index += Preorder(i, parent, route, visited);
+                index = Preorder(i, parent, preorderWalk, index);
             }
         }
 
         return index;
     }
-
     static void PrintSolution(int[] route)
     {
         Console.WriteLine("Shortest route: " + string.Join(" -> ", route) + " -> 0");
