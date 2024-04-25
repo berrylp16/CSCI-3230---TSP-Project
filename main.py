@@ -43,7 +43,7 @@ else:
 points = parse_points(points_str)
 
 # Prompt user for route
-route = prompt_with_default("Enter route", "7 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0 -> 0")
+route = prompt_with_default("Enter route", "0 -> 11 -> 3 -> 6 -> 13 -> 5 -> 4 -> 10 -> 12 -> 2 -> 8 -> 1 -> 9 -> 7 -> 0 -> 0")
 
 # Parse order
 order = parse_order(route)
